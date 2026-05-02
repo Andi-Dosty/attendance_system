@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4a90e2;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .btn-clockin {
+            background-color: #27ae60;
+            color: white;
+        }
+        .btn-clockout {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-logout {
+            background-color: white;
+            color: #4a90e2;
+            border: 1px solid #4a90e2;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 16px;
+            display: none;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2 style="margin:0">Student Dashboard</h2>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="card">
+        <h2>Mark Attendance</h2>
+        <p class="info">Your location will be checked before marking attendance.</p>
+        <button class="btn-clockin" onclick="clockIn()">Clock In</button>
+        <button class="btn-clockout" onclick="clockOut()">Clock Out</button>
+        <div id="status" class="status"></div>
+    </div>
+
+    <div class="card">
+        <h2>My Attendance Records</h2>
+        <div id="records">Loading...</div>
+    </div>
+
+    <script>
+        let attendanceId = localStorage.getItem('attendance_id');
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+        }
+
+        function clockIn() {
+            if (!navigator.geolocation) {
+                showStatus('Geolocation is not supported by your browser', 'error');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                const token = localStorage.getItem('token');
+                const response = await fetch('/clock-in', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        student_id: 1,
+                        schedule_id: 1,
+                        latitude: lat,
+                        longitude: lng
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('attendance_id', data.attendance_id);
+                    showStatus('Clocked in at ' + data.clock_in_time, 'success');
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            }, () => {
+                showStatus('Unable to get your location. Please allow location access.', 'error');
+            });
+        }
+
+        async function clockOut() {
+            const attendanceId = localStorage.getItem('attendance_id');
+            if (!attendanceId) {
+                showStatus('You have not clocked in yet', 'error');
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            const response = await fetch('/clock-out', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ attendance_id: parseInt(attendanceId) })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                localStorage.removeItem('attendance_id');
+                showStatus('Clocked out. Duration: ' + Math.round(data.duration_minutes) + ' minutes', 'success');
+            } else {
+                showStatus(data.message, 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login';
+        }
+    </script>
+</body>
+</html>
