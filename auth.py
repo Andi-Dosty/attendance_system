@@ -30,6 +30,18 @@ def register():
                    (name, email, password_hash, role))
     db.commit()
 
+    user_id = cursor.lastrowid
+
+    if role == 'lecturer':
+        cursor.execute("INSERT INTO lecturers (user_id, department, staff_id) VALUES (%s, %s, %s)",
+                          (user_id, 'General', 'N/A'))
+        db.commit()
+
+    if role == 'student':
+        cursor.execute("INSERT INTO students (user_id, student_number, programme, year_of_study) VALUES (%s, %s, %s, %s)",
+                          (user_id, 'N/A', 'N/A', 1))
+        db.commit()
+
     return jsonify({"message": "User registered successfully"}), 201
 
 @auth.route('/login', methods=['POST'])
@@ -72,3 +84,7 @@ def lecturer_dashboard():
 @auth.route('/admin-dashboard')
 def admin_dashboard():
     return render_template('admin_dashboard.html')
+
+@auth.route('/courses')
+def courses_page():
+    return render_template('courses.html')

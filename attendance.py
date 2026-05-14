@@ -42,7 +42,7 @@ def clock_in():
     student_lng = data['longitude']
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
     cursor.execute("SELECT * FROM location LIMIT 1")
     location = cursor.fetchone()
 
@@ -70,7 +70,7 @@ def clock_in():
                    (student_id, clock_in_time, status))
     db.commit()
 
-    
+
     return jsonify({'message': 'Clocked in successfully', 'clock_in_time': str(clock_in_time)}), 201
 
 @attendance.route('/clock-out', methods=['POST'])
@@ -84,7 +84,7 @@ def clock_out():
     clock_out_time = datetime.datetime.now()
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
     cursor.execute("SELECT clock_in_time FROM attendance WHERE attendance_id = %s", (attendance_id,))
     record = cursor.fetchone()
 
@@ -107,7 +107,7 @@ def attendance_records():
         return jsonify({'message': 'Unauthorized. Please login first.'}), 401
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
     cursor.execute("SELECT * FROM attendance")
     records = cursor.fetchall()
 
@@ -131,7 +131,7 @@ def admin_stats():
     if not user or user['role'] != 'admin':
         return jsonify({'message': 'Unauthorized. Admin access required.'}), 401
     db = get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
     
     cursor.execute("SELECT COUNT(*) FROM users")
     total_users = cursor.fetchone()[0]
@@ -155,7 +155,7 @@ def admin_users():
         return jsonify({'message': 'Unauthorized. Admin access required.'}), 401
 
     db = get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
     cursor.execute("SELECT * FROM users")
     users = cursor.fetchall()
 
@@ -178,9 +178,52 @@ def update_location():
         return jsonify({'message': 'Unauthorized. Admin access required.'}), 401
     data = request.get_json()
     db = get_db()
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
     cursor.execute("UPDATE location SET venue_name=%s, latitude=%s, longitude=%s, radius_meters=%s WHERE location_id=1",
                    (data['venue_name'], data['latitude'], data['longitude'], data['radius_meters']))
     db.commit()
     return jsonify({'message': 'Location updated successfully'}), 200
 
+
+@attendance.route('/courses', methods=['GET'])
+def get_courses():
+    user = verify_token(request)
+    if not user:
+        return jsonify({'message': 'Unauthorized. Please login first.'}), 401
+
+    db = get_db()
+    cursor = db.cursor(buffered=True)
+    cursor.execute("SELECT * FROM courses")
+    courses = cursor.fetchall()
+
+    result = []
+    for course in courses:
+        result.append({
+            'course_id': course[0],
+            'course_code': course[1],
+            'course_name': course[2],
+            'lecturer_id': course[3]
+        })
+
+    return jsonify(result), 200
+
+@attendance.route('/courses', methods=['POST'])
+def add_course():
+    user = verify_token(request)
+    if not user or user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized. Admin access required.'}), 401
+
+    data = request.get_json()
+    db = get_db()
+    cursor = db.cursor(buffered=True)
+    
+    cursor.execute("SELECT lecturer_id FROM lecturers WHERE user_id = %s", (data['lecturer_id'],))
+    lecturer = cursor.fetchone()
+    if not lecturer:
+        return jsonify({'message': 'Lecturer not found'}), 404
+
+    cursor.execute("INSERT INTO courses (course_code, course_name, lecturer_id) VALUES (%s, %s, %s)",
+                   (data['course_code'], data['course_name'], lecturer[0]))
+    db.commit()
+
+    return jsonify({'message': 'Course added successfully'}), 201
