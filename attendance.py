@@ -57,10 +57,20 @@ def clock_in():
         return jsonify({'message': 'You are outside the campus boundary'}), 403
 
     clock_in_time = datetime.datetime.now()
-    cursor.execute("INSERT INTO attendance (student_id, schedule_id, clock_in_time, status) VALUES (%s, %s, %s, %s)",
-                   (student_id, schedule_id, clock_in_time, 'present'))
+    cursor.execute("SELECT start_time FROM schedules WHERE schedule_id = %s", (schedule_id,))
+    session = cursor.fetchone()
+
+    status ='present'
+    if session:
+        session_start = session[0]
+        if clock_in_time > session_start:
+            status = 'late'
+    
+    cursor.execute("INSERT INTO attendance (student_id, clock_in_time, status) VALUES (%s, %s, %s)", 
+                   (student_id, clock_in_time, status))
     db.commit()
 
+    
     return jsonify({'message': 'Clocked in successfully', 'clock_in_time': str(clock_in_time)}), 201
 
 @attendance.route('/clock-out', methods=['POST'])
