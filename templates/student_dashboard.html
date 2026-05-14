@@ -94,6 +94,9 @@
     </div>
 
     <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = '/login';
+        }
         let attendanceId = localStorage.getItem('attendance_id');
 
         function showStatus(message, type) {

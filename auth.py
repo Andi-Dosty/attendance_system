@@ -15,11 +15,17 @@ def register():
     email = data['email']
     password = data['password']
     role = data['role']
-
-    password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     db = get_db()
     cursor = db.cursor()
+    
+    # Check if email already exists
+    cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+    existing_user = cursor.fetchone()
+    if existing_user:
+        return jsonify({"message": "Email already exists"}), 400
+    
     cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES (%s, %s, %s, %s)",
                    (name, email, password_hash, role))
     db.commit()

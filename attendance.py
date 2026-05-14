@@ -2,8 +2,20 @@ from flask import Blueprint, request, jsonify, render_template
 from database import get_db
 import math
 import datetime
+import jwt 
 
 attendance = Blueprint('attendance', __name__)
+
+def verify_token(request):
+    token = request.headers.get('Authorization')
+    if not token:
+        return None
+    try:
+        token = token.split(' ')[1]
+        data = jwt.decode(token, 'attendance_secret_key', algorithms=['HS256'])
+        return data
+    except:
+        return None
 
 def check_geofence(student_lat, student_lng, campus_lat, campus_lng, radius_meters):
     R = 6371000
@@ -20,6 +32,9 @@ def check_geofence(student_lat, student_lng, campus_lat, campus_lng, radius_mete
 
 @attendance.route('/clock-in', methods=['POST'])
 def clock_in():
+    user = verify_token(request)
+    if not user:
+        return jsonify({'message': 'Unauthorized. Please login first.'}), 401
     data = request.get_json()
     student_id = data['student_id']
     schedule_id = data['schedule_id']
@@ -50,6 +65,9 @@ def clock_in():
 
 @attendance.route('/clock-out', methods=['POST'])
 def clock_out():
+    user = verify_token(request)
+    if not user:
+        return jsonify({'message': 'Unauthorized. Please login first.'}), 401
     data = request.get_json()
     attendance_id = data['attendance_id']
 
@@ -74,6 +92,10 @@ def clock_out():
 
 @attendance.route('/attendance-records', methods=['GET'])
 def attendance_records():
+    user = verify_token(request)
+    if not user:
+        return jsonify({'message': 'Unauthorized. Please login first.'}), 401
+
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM attendance")
@@ -95,6 +117,9 @@ def attendance_records():
 
 @attendance.route('/admin-stats', methods=['GET'])
 def admin_stats():
+    user = verify_token(request)
+    if not user or user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized. Admin access required.'}), 401
     db = get_db()
     cursor = db.cursor()
     
@@ -115,6 +140,10 @@ def admin_stats():
 
 @attendance.route('/admin-users', methods=['GET'])
 def admin_users():
+    user = verify_token(request)
+    if not user or user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized. Admin access required.'}), 401
+
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM users")
@@ -134,6 +163,9 @@ def admin_users():
 
 @attendance.route('/update-location', methods=['POST'])
 def update_location():
+    user = verify_token(request)
+    if not user or user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized. Admin access required.'}), 401
     data = request.get_json()
     db = get_db()
     cursor = db.cursor()

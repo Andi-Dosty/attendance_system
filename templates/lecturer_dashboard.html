@@ -102,6 +102,9 @@
     </div>
 
     <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = '/login';
+        }
         async function loadAttendance() {
             const token = localStorage.getItem('token');
             const response = await fetch('/attendance-records', {
