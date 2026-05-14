@@ -49,7 +49,7 @@ def login():
             'role': user[4],
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
         }, SECRET_KEY)
-        return jsonify({'token': token, 'role': user[4]}), 200
+        return jsonify({'token': token, 'role': user[4], 'user_id': user[0]}), 200
 
     return jsonify({'message': 'Invalid credentials'}), 401
 

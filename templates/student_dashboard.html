@@ -124,7 +124,7 @@
                         'Authorization': 'Bearer ' + token
                     },
                     body: JSON.stringify({
-                        student_id: 1,
+                        student_id: parseInt(localStorage.getItem('user_id')),
                         schedule_id: 1,
                         latitude: lat,
                         longitude: lng
