@@ -83,6 +83,10 @@
     <div class="card">
         <h2>Mark Attendance</h2>
         <p class="info">Your location will be checked before marking attendance.</p>
+        <select id="schedule-id" style="width:auto;padding:10px;margin-bottom:12px;border:1px solid #ddd;border-radius:6px;">
+            <option value="">Select Session</option>
+        </select>
+        <br/>
         <button class="btn-clockin" onclick="clockIn()">Clock In</button>
         <button class="btn-clockout" onclick="clockOut()">Clock Out</button>
         <div id="status" class="status"></div>
@@ -97,7 +101,6 @@
         if (!localStorage.getItem('token')) {
             window.location.href = '/login';
         }
-        let attendanceId = localStorage.getItem('attendance_id');
 
         function showStatus(message, type) {
             const status = document.getElementById('status');
@@ -106,7 +109,28 @@
             status.style.display = 'block';
         }
 
+        async function loadSchedules() {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/schedules', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await response.json();
+            const select = document.getElementById('schedule-id');
+            data.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.schedule_id;
+                option.textContent = s.course_name + ' — ' + s.start_time;
+                select.appendChild(option);
+            });
+        }
+
         function clockIn() {
+            const scheduleId = document.getElementById('schedule-id').value;
+            if (!scheduleId) {
+                showStatus('Please select a session before clocking in.', 'error');
+                return;
+            }
+
             if (!navigator.geolocation) {
                 showStatus('Geolocation is not supported by your browser', 'error');
                 return;
@@ -125,7 +149,7 @@
                     },
                     body: JSON.stringify({
                         student_id: parseInt(localStorage.getItem('user_id')),
-                        schedule_id: 1,
+                        schedule_id: parseInt(scheduleId),
                         latitude: lat,
                         longitude: lng
                     })
@@ -173,6 +197,8 @@
             localStorage.clear();
             window.location.href = '/login';
         }
+
+        loadSchedules();
     </script>
 </body>
 </html>

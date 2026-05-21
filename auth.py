@@ -3,10 +3,11 @@ from database import get_db
 import bcrypt
 import jwt
 import datetime
+import os
 
 auth =Blueprint('auth', __name__)
 
-SECRET_KEY ="attendance_secret_key"
+SECRET_KEY = os.environ.get('SECRET_KEY', 'attendance_secret_key')
 
 @auth.route('/register', methods=['POST'])
 def register():
@@ -33,13 +34,15 @@ def register():
     user_id = cursor.lastrowid
 
     if role == 'lecturer':
+        staff_id = f'STAFF{user_id:04d}'
         cursor.execute("INSERT INTO lecturers (user_id, department, staff_id) VALUES (%s, %s, %s)",
-                          (user_id, 'General', 'N/A'))
+                          (user_id, 'General', staff_id))
         db.commit()
 
     if role == 'student':
+        student_number = f'STU{user_id:04d}'
         cursor.execute("INSERT INTO students (user_id, student_number, programme, year_of_study) VALUES (%s, %s, %s, %s)",
-                          (user_id, 'N/A', 'N/A', 1))
+                          (user_id, student_number, 'General', 1))
         db.commit()
 
     return jsonify({"message": "User registered successfully"}), 201
@@ -59,7 +62,7 @@ def login():
         token = jwt.encode({
             'user_id': user[0],
             'role': user[4],
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)
         }, SECRET_KEY)
         return jsonify({'token': token, 'role': user[4], 'user_id': user[0]}), 200
 

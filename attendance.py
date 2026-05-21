@@ -2,9 +2,12 @@ from flask import Blueprint, request, jsonify, render_template
 from database import get_db
 import math
 import datetime
-import jwt 
+import jwt
+import os
 
 attendance = Blueprint('attendance', __name__)
+
+SECRET_KEY = os.environ.get('SECRET_KEY', 'attendance_secret_key')
 
 def verify_token(request):
     token = request.headers.get('Authorization')
@@ -12,7 +15,7 @@ def verify_token(request):
         return None
     try:
         token = token.split(' ')[1]
-        data = jwt.decode(token, 'attendance_secret_key', algorithms=['HS256'])
+        data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         return data
     except:
         return None
@@ -56,22 +59,32 @@ def clock_in():
     if not check_geofence(student_lat, student_lng, campus_lat, campus_lng, radius):
         return jsonify({'message': 'You are outside the campus boundary'}), 403
 
+    cursor.execute("SELECT student_id FROM students WHERE user_id = %s", (student_id,))
+    student = cursor.fetchone()
+    if not student:
+        return jsonify({'message': 'Student not found'}), 404
+    actual_student_id = student[0]
+    
     clock_in_time = datetime.datetime.now()
-    cursor.execute("SELECT start_time FROM schedules WHERE schedule_id = %s", (schedule_id,))
+    cursor.execute("SELECT start_time FROM schedule WHERE schedule_id = %s", (schedule_id,))
     session = cursor.fetchone()
 
-    status ='present'
+    status = 'present'
     if session:
         session_start = session[0]
+        # MySQL TIME columns return as timedelta; convert to datetime for comparison
+        if isinstance(session_start, datetime.timedelta):
+            session_start = datetime.datetime.combine(clock_in_time.date(),
+                                (datetime.datetime.min + session_start).time())
         if clock_in_time > session_start:
             status = 'late'
-    
-    cursor.execute("INSERT INTO attendance (student_id, clock_in_time, status) VALUES (%s, %s, %s)", 
-                   (student_id, clock_in_time, status))
+
+    cursor.execute("INSERT INTO attendance (student_id, schedule_id, clock_in_time, status) VALUES (%s, %s, %s, %s)",
+                   (actual_student_id, schedule_id, clock_in_time, status))
     db.commit()
+    attendance_id = cursor.lastrowid
 
-
-    return jsonify({'message': 'Clocked in successfully', 'clock_in_time': str(clock_in_time)}), 201
+    return jsonify({'message': 'Clocked in successfully', 'clock_in_time': str(clock_in_time), 'attendance_id': attendance_id}), 201
 
 @attendance.route('/clock-out', methods=['POST'])
 def clock_out():
@@ -108,7 +121,16 @@ def attendance_records():
 
     db = get_db()
     cursor = db.cursor(buffered=True)
-    cursor.execute("SELECT * FROM attendance")
+
+    if user['role'] == 'student':
+        cursor.execute("SELECT student_id FROM students WHERE user_id = %s", (user['user_id'],))
+        student = cursor.fetchone()
+        if not student:
+            return jsonify([]), 200
+        cursor.execute("SELECT * FROM attendance WHERE student_id = %s", (student[0],))
+    else:
+        cursor.execute("SELECT * FROM attendance")
+
     records = cursor.fetchall()
 
     result = []
@@ -185,7 +207,34 @@ def update_location():
     return jsonify({'message': 'Location updated successfully'}), 200
 
 
-@attendance.route('/courses', methods=['GET'])
+@attendance.route('/schedules', methods=['GET'])
+def get_schedules():
+    user = verify_token(request)
+    if not user:
+        return jsonify({'message': 'Unauthorized. Please login first.'}), 401
+
+    db = get_db()
+    cursor = db.cursor(buffered=True)
+    cursor.execute("""
+        SELECT s.schedule_id, s.start_time, s.end_time, c.course_name
+        FROM schedule s
+        JOIN courses c ON s.course_id = c.course_id
+    """)
+    rows = cursor.fetchall()
+
+    result = []
+    for row in rows:
+        result.append({
+            'schedule_id': row[0],
+            'start_time': str(row[1]),
+            'end_time': str(row[2]),
+            'course_name': row[3]
+        })
+
+    return jsonify(result), 200
+
+
+@attendance.route('/api/courses', methods=['GET'])
 def get_courses():
     user = verify_token(request)
     if not user:
@@ -207,7 +256,7 @@ def get_courses():
 
     return jsonify(result), 200
 
-@attendance.route('/courses', methods=['POST'])
+@attendance.route('/api/courses', methods=['POST'])
 def add_course():
     user = verify_token(request)
     if not user or user['role'] != 'admin':

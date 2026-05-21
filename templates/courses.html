@@ -109,7 +109,7 @@
 
         async function loadCourses() {
             const token = localStorage.getItem('token');
-            const response = await fetch('/courses', {
+            const response = await fetch('/api/courses', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             const data = await response.json();
@@ -131,7 +131,7 @@
 
         async function addCourse() {
             const token = localStorage.getItem('token');
-            const response = await fetch('/courses', {
+            const response = await fetch('/api/courses', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
