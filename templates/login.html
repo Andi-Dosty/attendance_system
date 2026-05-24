@@ -63,13 +63,27 @@
         <input type="email" id="email" placeholder="Email" />
         <input type="password" id="password" placeholder="Password" />
         <button onclick="login()">Login</button>
+        <div id="status" style="display:none;padding:10px;border-radius:6px;margin-top:10px;font-size:14px;"></div>
         <p>Don't have an account? <a href="/register">Register</a></p>
     </div>
 
     <script>
+        function showStatus(message, ok) {
+            const s = document.getElementById('status');
+            s.textContent = message;
+            s.style.display = 'block';
+            s.style.backgroundColor = ok ? '#d4edda' : '#f8d7da';
+            s.style.color = ok ? '#155724' : '#721c24';
+        }
+
         async function login() {
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showStatus('Please enter your email and password.', false);
+                return;
+            }
 
             const response = await fetch('/login', {
                 method: 'POST',
@@ -82,16 +96,18 @@
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('role', data.role);
                 localStorage.setItem('user_id', data.user_id);
-                alert('Login successful!');
-                if (data.role === 'student') {
-                    window.location.href = '/student-dashboard';
-                } else if (data.role === 'lecturer') {
-                    window.location.href = '/lecturer-dashboard';
-                } else if (data.role === 'admin') {
-                    window.location.href = '/admin-dashboard';
-                }
+                showStatus('Login successful! Redirecting...', true);
+                setTimeout(() => {
+                    if (data.role === 'student') {
+                        window.location.href = '/student-dashboard';
+                    } else if (data.role === 'lecturer') {
+                        window.location.href = '/lecturer-dashboard';
+                    } else if (data.role === 'admin') {
+                        window.location.href = '/admin-dashboard';
+                    }
+                }, 1000);
             } else {
-                alert(data.message);
+                showStatus(data.message, false);
             }
         }
     </script>

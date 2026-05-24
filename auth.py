@@ -13,38 +13,49 @@ ADMIN_CODE = os.environ.get('ADMIN_CODE', 'RMU-ADMIN-2026')
 
 
 def create_user(name, email, password, role):
-    password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    db = get_db()
-    cursor = db.cursor()
+    if not name or not email or not password:
+        return None, "Name, email and password are required"
+    if '@' not in email:
+        return None, "Invalid email address"
+    if len(password) < 6:
+        return None, "Password must be at least 6 characters"
+    try:
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        db = get_db()
+        cursor = db.cursor()
 
-    cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
-    if cursor.fetchone():
-        return None, "Email already exists"
+        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+        if cursor.fetchone():
+            return None, "An account with this email already exists"
 
-    cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES (%s, %s, %s, %s)",
-                   (name, email, password_hash, role))
-    db.commit()
-    user_id = cursor.lastrowid
-
-    if role == 'student':
-        student_number = f'STU{user_id:04d}'
-        cursor.execute("INSERT INTO students (user_id, student_number, programme, year_of_study) VALUES (%s, %s, %s, %s)",
-                       (user_id, student_number, 'General', 1))
+        cursor.execute("INSERT INTO users (name, email, password_hash, role) VALUES (%s, %s, %s, %s)",
+                       (name, email, password_hash, role))
         db.commit()
+        user_id = cursor.lastrowid
 
-    if role == 'lecturer':
-        staff_id = f'STAFF{user_id:04d}'
-        cursor.execute("INSERT INTO lecturers (user_id, department, staff_id) VALUES (%s, %s, %s)",
-                       (user_id, 'General', staff_id))
-        db.commit()
+        if role == 'student':
+            student_number = f'STU{user_id:04d}'
+            cursor.execute("INSERT INTO students (user_id, student_number, programme, year_of_study) VALUES (%s, %s, %s, %s)",
+                           (user_id, student_number, 'General', 1))
+            db.commit()
 
-    return user_id, None
+        if role == 'lecturer':
+            staff_id = f'STAFF{user_id:04d}'
+            cursor.execute("INSERT INTO lecturers (user_id, department, staff_id) VALUES (%s, %s, %s)",
+                           (user_id, 'General', staff_id))
+            db.commit()
+
+        return user_id, None
+    except Exception as ex:
+        return None, f"Registration failed: {str(ex)}"
 
 
 @auth.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    _, error = create_user(data['name'], data['email'], data['password'], 'student')
+    if not data:
+        return jsonify({"message": "No data provided"}), 400
+    _, error = create_user(data.get('name', ''), data.get('email', ''), data.get('password', ''), 'student')
     if error:
         return jsonify({"message": error}), 400
     return jsonify({"message": "Student registered successfully"}), 201
@@ -53,9 +64,13 @@ def register():
 @auth.route('/lecturer-register', methods=['POST'])
 def lecturer_register():
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "No data provided"}), 400
+    if not data.get('lecturer_code'):
+        return jsonify({"message": "Lecturer code is required"}), 400
     if data.get('lecturer_code') != LECTURER_CODE:
         return jsonify({"message": "Invalid lecturer code"}), 403
-    _, error = create_user(data['name'], data['email'], data['password'], 'lecturer')
+    _, error = create_user(data.get('name', ''), data.get('email', ''), data.get('password', ''), 'lecturer')
     if error:
         return jsonify({"message": error}), 400
     return jsonify({"message": "Lecturer registered successfully"}), 201
@@ -64,9 +79,13 @@ def lecturer_register():
 @auth.route('/admin-register', methods=['POST'])
 def admin_register():
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "No data provided"}), 400
+    if not data.get('admin_code'):
+        return jsonify({"message": "Admin code is required"}), 400
     if data.get('admin_code') != ADMIN_CODE:
         return jsonify({"message": "Invalid admin code"}), 403
-    _, error = create_user(data['name'], data['email'], data['password'], 'admin')
+    _, error = create_user(data.get('name', ''), data.get('email', ''), data.get('password', ''), 'admin')
     if error:
         return jsonify({"message": error}), 400
     return jsonify({"message": "Admin registered successfully"}), 201

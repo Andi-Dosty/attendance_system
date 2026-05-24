@@ -66,15 +66,29 @@
         <input type="password" id="password" placeholder="Password" />
         <input type="password" id="admin-code" placeholder="Admin Registration Code" />
         <button onclick="register()">Register as Admin</button>
+        <div id="status" style="display:none;padding:10px;border-radius:6px;margin-top:10px;font-size:14px;"></div>
         <p>Already have an account? <a href="/login">Login</a></p>
     </div>
 
     <script>
+        function showStatus(message, ok) {
+            const s = document.getElementById('status');
+            s.textContent = message;
+            s.style.display = 'block';
+            s.style.backgroundColor = ok ? '#d4edda' : '#f8d7da';
+            s.style.color = ok ? '#155724' : '#721c24';
+        }
+
         async function register() {
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const admin_code = document.getElementById('admin-code').value;
+            const admin_code = document.getElementById('admin-code').value.trim();
+
+            if (!name || !email || !password || !admin_code) {
+                showStatus('Please fill in all fields including the admin code.', false);
+                return;
+            }
 
             const response = await fetch('/admin-register', {
                 method: 'POST',
@@ -84,10 +98,10 @@
 
             const data = await response.json();
             if (response.ok) {
-                alert('Admin account created! Please login.');
-                window.location.href = '/login';
+                showStatus('Admin account created! Redirecting to login...', true);
+                setTimeout(() => window.location.href = '/login', 1500);
             } else {
-                alert(data.message);
+                showStatus(data.message, false);
             }
         }
     </script>
