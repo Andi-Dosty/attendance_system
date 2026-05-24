@@ -127,9 +127,24 @@ def attendance_records():
         student = cursor.fetchone()
         if not student:
             return jsonify([]), 200
-        cursor.execute("SELECT * FROM attendance WHERE student_id = %s", (student[0],))
+        cursor.execute("""
+            SELECT a.attendance_id, a.student_id, a.schedule_id, a.clock_in_time,
+                   a.clock_out_time, a.status, a.duration_minutes, c.course_name
+            FROM attendance a
+            LEFT JOIN schedule s ON a.schedule_id = s.schedule_id
+            LEFT JOIN courses c ON s.course_id = c.course_id
+            WHERE a.student_id = %s
+            ORDER BY a.clock_in_time DESC
+        """, (student[0],))
     else:
-        cursor.execute("SELECT * FROM attendance")
+        cursor.execute("""
+            SELECT a.attendance_id, a.student_id, a.schedule_id, a.clock_in_time,
+                   a.clock_out_time, a.status, a.duration_minutes, c.course_name
+            FROM attendance a
+            LEFT JOIN schedule s ON a.schedule_id = s.schedule_id
+            LEFT JOIN courses c ON s.course_id = c.course_id
+            ORDER BY a.clock_in_time DESC
+        """)
 
     records = cursor.fetchall()
 
@@ -142,7 +157,8 @@ def attendance_records():
             'clock_in_time': str(record[3]) if record[3] else None,
             'clock_out_time': str(record[4]) if record[4] else None,
             'status': record[5],
-            'duration_minutes': record[6]
+            'duration_minutes': record[6],
+            'course_name': record[7] if record[7] else 'N/A'
         })
 
     return jsonify(result), 200

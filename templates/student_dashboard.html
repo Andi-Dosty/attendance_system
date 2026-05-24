@@ -32,6 +32,13 @@
             color: #333;
             margin-top: 0;
         }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; font-size: 14px; }
+        td { font-size: 14px; }
+        .present { color: #27ae60; font-weight: bold; }
+        .late { color: #f39c12; font-weight: bold; }
+        .absent { color: #e74c3c; font-weight: bold; }
         button {
             padding: 12px 24px;
             border: none;
@@ -97,7 +104,20 @@
 
     <div class="card">
         <h2>My Attendance Records</h2>
-        <div id="records">Loading...</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Clock In</th>
+                    <th>Clock Out</th>
+                    <th>Duration (mins)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="records-table">
+                <tr><td colspan="5">Loading...</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <script>
@@ -201,7 +221,32 @@
             window.location.href = '/login';
         }
 
+        async function loadRecords() {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/attendance-records', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await response.json();
+            const tbody = document.getElementById('records-table');
+
+            if (!response.ok || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">No attendance records yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(r => `
+                <tr>
+                    <td>${r.course_name}</td>
+                    <td>${r.clock_in_time || '-'}</td>
+                    <td>${r.clock_out_time || '-'}</td>
+                    <td>${r.duration_minutes ? Math.round(r.duration_minutes) : '-'}</td>
+                    <td class="${r.status}">${r.status}</td>
+                </tr>
+            `).join('');
+        }
+
         loadSchedules();
+        loadRecords();
     </script>
 </body>
 </html>
