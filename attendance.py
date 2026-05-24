@@ -1,9 +1,11 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, Response
 from database import get_db
 import math
 import datetime
 import jwt
 import os
+import csv
+import io
 
 attendance = Blueprint('attendance', __name__)
 
@@ -297,6 +299,47 @@ def reports():
             'duration_minutes': round(r[4]) if r[4] else '-'
         } for r in recent_rows]
     }), 200
+
+
+@attendance.route('/api/export-csv', methods=['GET'])
+def export_csv():
+    user = verify_token(request)
+    if not user or user['role'] not in ['admin', 'lecturer']:
+        return jsonify({'message': 'Unauthorized.'}), 401
+
+    db = get_db()
+    cursor = db.cursor(buffered=True)
+    cursor.execute("""
+        SELECT u.name, c.course_name, a.clock_in_time, a.clock_out_time,
+               a.status, a.duration_minutes
+        FROM attendance a
+        JOIN students st ON a.student_id = st.student_id
+        JOIN users u ON st.user_id = u.user_id
+        JOIN schedule s ON a.schedule_id = s.schedule_id
+        JOIN courses c ON s.course_id = c.course_id
+        ORDER BY a.clock_in_time DESC
+    """)
+    rows = cursor.fetchall()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Student Name', 'Course', 'Clock In', 'Clock Out', 'Status', 'Duration (mins)'])
+    for row in rows:
+        writer.writerow([
+            row[0], row[1],
+            str(row[2]) if row[2] else '-',
+            str(row[3]) if row[3] else '-',
+            row[4],
+            round(row[5]) if row[5] else '-'
+        ])
+
+    output.seek(0)
+    filename = f"attendance_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename={filename}'}
+    )
 
 
 @attendance.route('/api/enroll', methods=['POST'])

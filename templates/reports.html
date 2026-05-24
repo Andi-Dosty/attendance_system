@@ -74,7 +74,10 @@
 <body>
     <div class="header">
         <h2 style="margin:0">Attendance Reports</h2>
-        <button class="btn-back" onclick="history.back()">Back</button>
+        <div style="display:flex;gap:10px;">
+            <button class="btn-back" onclick="exportCSV()">Export CSV</button>
+            <button class="btn-back" onclick="history.back()">Back</button>
+        </div>
     </div>
 
     <div class="summary-row">
@@ -204,6 +207,22 @@
                     <td>${r.duration_minutes}</td>
                 </tr>
             `).join('');
+        }
+
+        function exportCSV() {
+            const token = localStorage.getItem('token');
+            fetch('/api/export-csv', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'attendance.csv';
+                a.click();
+                window.URL.revokeObjectURL(url);
+            });
         }
 
         loadReports();
