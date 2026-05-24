@@ -39,6 +39,15 @@
         .present { color: #27ae60; font-weight: bold; }
         .late { color: #f39c12; font-weight: bold; }
         .absent { color: #e74c3c; font-weight: bold; }
+        .table-wrap { overflow-x: auto; }
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .header div { flex-wrap: wrap; }
+            button { padding: 10px 16px; font-size: 14px; }
+            th, td { padding: 8px; font-size: 13px; }
+            #schedule-id { width: 100%; box-sizing: border-box; }
+        }
         button {
             padding: 12px 24px;
             border: none;

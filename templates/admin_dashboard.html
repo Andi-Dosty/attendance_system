@@ -104,6 +104,15 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+        .table-wrap { overflow-x: auto; }
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .header div { flex-wrap: wrap; }
+            .cards-row { flex-direction: column; }
+            .stat-card h3 { font-size: 28px; }
+            th, td { padding: 8px; font-size: 13px; }
+        }
     </style>
 </head>
 <body>
@@ -144,6 +153,7 @@
 
     <div class="card">
         <h2>All Users</h2>
+        <div class="table-wrap">
         <table>
             <thead>
                 <tr>
@@ -158,6 +168,7 @@
                 <tr><td colspan="5">Loading...</td></tr>
             </tbody>
         </table>
+        </div>
     </div>
 
     <script>

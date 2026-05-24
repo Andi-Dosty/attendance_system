@@ -69,6 +69,15 @@
         .present-card h3 { color: #27ae60; }
         .late-card h3 { color: #f39c12; }
         .total-card h3 { color: #2c3e50; }
+        .table-wrap { overflow-x: auto; }
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .charts-row { flex-direction: column; }
+            .summary-row { flex-direction: column; }
+            .summary-card h3 { font-size: 24px; }
+            th, td { padding: 8px; font-size: 13px; }
+        }
     </style>
 </head>
 <body>

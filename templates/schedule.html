@@ -58,6 +58,13 @@
         .success { background-color: #d4edda; color: #155724; }
         .error { background-color: #f8d7da; color: #721c24; }
         label { font-size: 13px; color: #555; margin-top: 6px; display: block; }
+        .table-wrap { overflow-x: auto; }
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .form-row { flex-direction: column; }
+            th, td { padding: 8px; font-size: 13px; }
+        }
     </style>
 </head>
 <body>
