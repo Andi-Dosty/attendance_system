@@ -216,7 +216,7 @@ def get_schedules():
     db = get_db()
     cursor = db.cursor(buffered=True)
     cursor.execute("""
-        SELECT s.schedule_id, s.start_time, s.end_time, c.course_name
+        SELECT s.schedule_id, s.start_time, s.end_time, s.venue, s.day_of_week, c.course_name
         FROM schedule s
         JOIN courses c ON s.course_id = c.course_id
     """)
@@ -228,10 +228,138 @@ def get_schedules():
             'schedule_id': row[0],
             'start_time': str(row[1]),
             'end_time': str(row[2]),
-            'course_name': row[3]
+            'venue': row[3],
+            'day_of_week': row[4],
+            'course_name': row[5]
         })
 
     return jsonify(result), 200
+
+
+@attendance.route('/api/reports', methods=['GET'])
+def reports():
+    user = verify_token(request)
+    if not user or user['role'] not in ['admin', 'lecturer']:
+        return jsonify({'message': 'Unauthorized.'}), 401
+
+    db = get_db()
+    cursor = db.cursor(buffered=True)
+
+    cursor.execute("SELECT status, COUNT(*) FROM attendance GROUP BY status")
+    status_rows = cursor.fetchall()
+    status_data = {row[0]: row[1] for row in status_rows}
+
+    cursor.execute("""
+        SELECT c.course_name, COUNT(a.attendance_id)
+        FROM attendance a
+        JOIN schedule s ON a.schedule_id = s.schedule_id
+        JOIN courses c ON s.course_id = c.course_id
+        GROUP BY c.course_name
+    """)
+    course_rows = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT u.name, c.course_name, a.clock_in_time, a.status, a.duration_minutes
+        FROM attendance a
+        JOIN students st ON a.student_id = st.student_id
+        JOIN users u ON st.user_id = u.user_id
+        JOIN schedule s ON a.schedule_id = s.schedule_id
+        JOIN courses c ON s.course_id = c.course_id
+        ORDER BY a.clock_in_time DESC
+        LIMIT 20
+    """)
+    recent_rows = cursor.fetchall()
+
+    return jsonify({
+        'status_breakdown': status_data,
+        'attendance_by_course': [{'course': r[0], 'count': r[1]} for r in course_rows],
+        'recent_records': [{
+            'student_name': r[0],
+            'course_name': r[1],
+            'clock_in_time': str(r[2]) if r[2] else '-',
+            'status': r[3],
+            'duration_minutes': round(r[4]) if r[4] else '-'
+        } for r in recent_rows]
+    }), 200
+
+
+@attendance.route('/api/enroll', methods=['POST'])
+def enroll():
+    user = verify_token(request)
+    if not user or user['role'] != 'student':
+        return jsonify({'message': 'Unauthorized. Students only.'}), 401
+
+    data = request.get_json()
+    db = get_db()
+    cursor = db.cursor(buffered=True)
+
+    cursor.execute("SELECT student_id FROM students WHERE user_id = %s", (user['user_id'],))
+    student = cursor.fetchone()
+    if not student:
+        return jsonify({'message': 'Student not found'}), 404
+    student_id = student[0]
+
+    cursor.execute("SELECT * FROM enrollment WHERE student_id = %s AND course_id = %s", (student_id, data['course_id']))
+    if cursor.fetchone():
+        return jsonify({'message': 'Already enrolled in this course'}), 400
+
+    cursor.execute("INSERT INTO enrollment (student_id, course_id, enrolled_date) VALUES (%s, %s, CURDATE())",
+                   (student_id, data['course_id']))
+    db.commit()
+    return jsonify({'message': 'Enrolled successfully'}), 201
+
+
+@attendance.route('/api/my-courses', methods=['GET'])
+def my_courses():
+    user = verify_token(request)
+    if not user or user['role'] != 'student':
+        return jsonify({'message': 'Unauthorized. Students only.'}), 401
+
+    db = get_db()
+    cursor = db.cursor(buffered=True)
+
+    cursor.execute("SELECT student_id FROM students WHERE user_id = %s", (user['user_id'],))
+    student = cursor.fetchone()
+    if not student:
+        return jsonify([]), 200
+
+    cursor.execute("""
+        SELECT c.course_id, c.course_code, c.course_name, e.enrolled_date
+        FROM enrollment e
+        JOIN courses c ON e.course_id = c.course_id
+        WHERE e.student_id = %s
+    """, (student[0],))
+    rows = cursor.fetchall()
+
+    return jsonify([{
+        'course_id': r[0],
+        'course_code': r[1],
+        'course_name': r[2],
+        'enrolled_date': str(r[3])
+    } for r in rows]), 200
+
+
+@attendance.route('/api/schedules', methods=['POST'])
+def add_schedule():
+    user = verify_token(request)
+    if not user or user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized. Admin access required.'}), 401
+
+    data = request.get_json()
+    db = get_db()
+    cursor = db.cursor(buffered=True)
+
+    cursor.execute("SELECT course_id FROM courses WHERE course_id = %s", (data['course_id'],))
+    if not cursor.fetchone():
+        return jsonify({'message': 'Course not found'}), 404
+
+    cursor.execute("""
+        INSERT INTO schedule (course_id, start_time, end_time, venue, day_of_week)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (data['course_id'], data['start_time'], data['end_time'], data['venue'], data['day_of_week']))
+    db.commit()
+
+    return jsonify({'message': 'Schedule added successfully'}), 201
 
 
 @attendance.route('/api/courses', methods=['GET'])

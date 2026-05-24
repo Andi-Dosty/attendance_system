@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Courses - Enrollment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4a90e2;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h2 { color: #333; margin-top: 0; }
+        button {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-back { background-color: white; color: #4a90e2; border: 1px solid #4a90e2; }
+        .btn-enroll { background-color: #27ae60; color: white; }
+        .btn-enrolled { background-color: #ccc; color: #666; cursor: default; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
+        .status { padding: 10px; border-radius: 6px; margin-top: 10px; display: none; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .badge {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2 style="margin:0">My Courses</h2>
+        <button class="btn-back" onclick="window.location.href='/student-dashboard'">Back to Dashboard</button>
+    </div>
+
+    <div class="card">
+        <h2>My Enrolled Courses</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Course Name</th>
+                    <th>Enrolled Date</th>
+                </tr>
+            </thead>
+            <tbody id="my-courses-table">
+                <tr><td colspan="3">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Available Courses</h2>
+        <div id="status" class="status"></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Course Name</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="all-courses-table">
+                <tr><td colspan="3">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = '/login';
+        }
+
+        const token = localStorage.getItem('token');
+        let enrolledCourseIds = [];
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+        }
+
+        async function loadMyCourses() {
+            const response = await fetch('/api/my-courses', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                document.getElementById('my-courses-table').innerHTML = '<tr><td colspan="3">Could not load courses.</td></tr>';
+                return;
+            }
+            enrolledCourseIds = data.map(c => c.course_id);
+
+            const tbody = document.getElementById('my-courses-table');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3">You are not enrolled in any courses yet.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(c => `
+                <tr>
+                    <td>${c.course_code}</td>
+                    <td>${c.course_name}</td>
+                    <td>${c.enrolled_date}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadAllCourses() {
+            const response = await fetch('/api/courses', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                document.getElementById('all-courses-table').innerHTML = '<tr><td colspan="3">Could not load courses.</td></tr>';
+                return;
+            }
+            const tbody = document.getElementById('all-courses-table');
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3">No courses available.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(c => {
+                const isEnrolled = enrolledCourseIds.includes(c.course_id);
+                return `
+                <tr>
+                    <td>${c.course_code}</td>
+                    <td>${c.course_name}</td>
+                    <td>
+                        ${isEnrolled
+                            ? '<span class="badge">Enrolled</span>'
+                            : `<button class="btn-enroll" onclick="enroll(${c.course_id}, this)">Enroll</button>`
+                        }
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function enroll(courseId, btn) {
+            btn.disabled = true;
+            btn.textContent = 'Enrolling...';
+
+            const response = await fetch('/api/enroll', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ course_id: courseId })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                showStatus(data.message, 'success');
+                await loadMyCourses();
+                await loadAllCourses();
+            } else {
+                showStatus(data.message, 'error');
+                btn.disabled = false;
+                btn.textContent = 'Enroll';
+            }
+        }
+
+        async function init() {
+            await loadMyCourses();
+            await loadAllCourses();
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -109,7 +109,12 @@
 <body>
     <div class="header">
         <h2 style="margin:0">Admin Dashboard</h2>
-        <button class="btn-logout" onclick="logout()">Logout</button>
+        <div style="display:flex;gap:10px;">
+            <button class="btn-logout" onclick="window.location.href='/courses'">Manage Courses</button>
+            <button class="btn-logout" onclick="window.location.href='/schedule-management'">Manage Schedules</button>
+            <button class="btn-logout" onclick="window.location.href='/reports'">Reports</button>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
     </div>
 
     <div class="cards-row">
