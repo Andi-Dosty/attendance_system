@@ -128,8 +128,8 @@ The server starts at `http://localhost:5000`
 
 ## Project Team
 
-- Dosty
-- Andy Sackey
-- Obed-Ackah Armah
+- Shelter Deladem Ziwu - BIT000825
+- Andy Sackey - BCS0000327
+- Obed-Ackah Armah - BIT0004226
 
 Regional Maritime University
