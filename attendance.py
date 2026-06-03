@@ -41,7 +41,6 @@ def clock_in():
     if not user:
         return jsonify({'message': 'Unauthorized. Please login first.'}), 401
     data = request.get_json()
-    student_id = data['student_id']
     schedule_id = data['schedule_id']
     student_lat = data['latitude']
     student_lng = data['longitude']
@@ -61,7 +60,7 @@ def clock_in():
     if not check_geofence(student_lat, student_lng, campus_lat, campus_lng, radius):
         return jsonify({'message': 'You are outside the campus boundary'}), 403
 
-    cursor.execute("SELECT student_id FROM students WHERE user_id = %s", (student_id,))
+    cursor.execute("SELECT student_id FROM students WHERE user_id = %s", (user['user_id'],))
     student = cursor.fetchone()
     if not student:
         return jsonify({'message': 'Student not found'}), 404
@@ -100,11 +99,18 @@ def clock_out():
 
     db = get_db()
     cursor = db.cursor(buffered=True)
-    cursor.execute("SELECT clock_in_time FROM attendance WHERE attendance_id = %s", (attendance_id,))
+
+    cursor.execute("SELECT student_id FROM students WHERE user_id = %s", (user['user_id'],))
+    student = cursor.fetchone()
+    if not student:
+        return jsonify({'message': 'Student not found'}), 404
+
+    cursor.execute("SELECT clock_in_time FROM attendance WHERE attendance_id = %s AND student_id = %s",
+                   (attendance_id, student[0]))
     record = cursor.fetchone()
 
     if not record:
-        return jsonify({'message': 'Attendance record not found'}), 404
+        return jsonify({'message': 'Attendance record not found or does not belong to you'}), 404
 
     clock_in_time = record[0]
     duration = (clock_out_time - clock_in_time).total_seconds() / 60
