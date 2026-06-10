@@ -87,17 +87,17 @@ The server starts at `http://localhost:5000`
 
 | URL | Description | Access |
 |-----|-------------|--------|
-| `/login` | Login page | All |
-| `/register` | Student registration | Public |
-| `/lecturer-register` | Lecturer registration | Code required |
-| `/admin-register` | Admin registration | Code required |
-| `/student-dashboard` | Clock in/out + attendance history | Student |
-| `/enrollment` | Browse and enroll in courses | Student |
-| `/lecturer-dashboard` | View attendance records | Lecturer |
-| `/admin-dashboard` | Manage users, geofence | Admin |
-| `/courses` | Add and manage courses | Admin |
-| `/schedule-management` | Add and manage class sessions | Admin |
-| `/reports` | Charts, stats, CSV export | Admin / Lecturer |
+| [/login](http://localhost:5000/login) | Login page | All |
+| [/register](http://localhost:5000/register) | Student registration | Public |
+| [/lecturer-register](http://localhost:5000/lecturer-register) | Lecturer registration | Code required |
+| [/admin-register](http://localhost:5000/admin-register) | Admin registration | Code required |
+| [/student-dashboard](http://localhost:5000/student-dashboard) | Clock in/out + attendance history | Student |
+| [/enrollment](http://localhost:5000/enrollment) | Browse and enroll in courses | Student |
+| [/lecturer-dashboard](http://localhost:5000/lecturer-dashboard) | View attendance records | Lecturer |
+| [/admin-dashboard](http://localhost:5000/admin-dashboard) | Manage users, geofence | Admin |
+| [/courses](http://localhost:5000/courses) | Add and manage courses | Admin |
+| [/schedule-management](http://localhost:5000/schedule-management) | Add and manage class sessions | Admin |
+| [/reports](http://localhost:5000/reports) | Charts, stats, CSV export | Admin / Lecturer |
 
 ---
 
