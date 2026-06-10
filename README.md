@@ -67,7 +67,7 @@ ADMIN_CODE=RMU-ADMIN-2026
 python app.py
 ```
 
-The server starts at `http://localhost:5000`
+The server starts at `http://localhost:5000` (or `http://172.20.10.4:5000` from other devices on the same network)
 
 ---
 
@@ -85,19 +85,22 @@ The server starts at `http://localhost:5000`
 
 ## Pages
 
-| URL | Description | Access |
-|-----|-------------|--------|
-| [/login](http://localhost:5000/login) | Login page | All |
-| [/register](http://localhost:5000/register) | Student registration | Public |
-| [/lecturer-register](http://localhost:5000/lecturer-register) | Lecturer registration | Code required |
-| [/admin-register](http://localhost:5000/admin-register) | Admin registration | Code required |
-| [/student-dashboard](http://localhost:5000/student-dashboard) | Clock in/out + attendance history | Student |
-| [/enrollment](http://localhost:5000/enrollment) | Browse and enroll in courses | Student |
-| [/lecturer-dashboard](http://localhost:5000/lecturer-dashboard) | View attendance records | Lecturer |
-| [/admin-dashboard](http://localhost:5000/admin-dashboard) | Manage users, geofence | Admin |
-| [/courses](http://localhost:5000/courses) | Add and manage courses | Admin |
-| [/schedule-management](http://localhost:5000/schedule-management) | Add and manage class sessions | Admin |
-| [/reports](http://localhost:5000/reports) | Charts, stats, CSV export | Admin / Lecturer |
+**On this PC:** `http://localhost:5000`  
+**On other devices (same network):** `http://172.20.10.4:5000`
+
+| URL | PC | Phone / Other Device | Access |
+|-----|----|----------------------|--------|
+| /login | [localhost:5000/login](http://localhost:5000/login) | [172.20.10.4:5000/login](http://172.20.10.4:5000/login) | All |
+| /register | [localhost:5000/register](http://localhost:5000/register) | [172.20.10.4:5000/register](http://172.20.10.4:5000/register) | Public |
+| /lecturer-register | [localhost:5000/lecturer-register](http://localhost:5000/lecturer-register) | [172.20.10.4:5000/lecturer-register](http://172.20.10.4:5000/lecturer-register) | Code required |
+| /admin-register | [localhost:5000/admin-register](http://localhost:5000/admin-register) | [172.20.10.4:5000/admin-register](http://172.20.10.4:5000/admin-register) | Code required |
+| /student-dashboard | [localhost:5000/student-dashboard](http://localhost:5000/student-dashboard) | [172.20.10.4:5000/student-dashboard](http://172.20.10.4:5000/student-dashboard) | Student |
+| /enrollment | [localhost:5000/enrollment](http://localhost:5000/enrollment) | [172.20.10.4:5000/enrollment](http://172.20.10.4:5000/enrollment) | Student |
+| /lecturer-dashboard | [localhost:5000/lecturer-dashboard](http://localhost:5000/lecturer-dashboard) | [172.20.10.4:5000/lecturer-dashboard](http://172.20.10.4:5000/lecturer-dashboard) | Lecturer |
+| /admin-dashboard | [localhost:5000/admin-dashboard](http://localhost:5000/admin-dashboard) | [172.20.10.4:5000/admin-dashboard](http://172.20.10.4:5000/admin-dashboard) | Admin |
+| /courses | [localhost:5000/courses](http://localhost:5000/courses) | [172.20.10.4:5000/courses](http://172.20.10.4:5000/courses) | Admin |
+| /schedule-management | [localhost:5000/schedule-management](http://localhost:5000/schedule-management) | [172.20.10.4:5000/schedule-management](http://172.20.10.4:5000/schedule-management) | Admin |
+| /reports | [localhost:5000/reports](http://localhost:5000/reports) | [172.20.10.4:5000/reports](http://172.20.10.4:5000/reports) | Admin / Lecturer |
 
 ---
 
