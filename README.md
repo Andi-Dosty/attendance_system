@@ -67,7 +67,7 @@ ADMIN_CODE=RMU-ADMIN-2026
 python app.py
 ```
 
-The server starts at `http://localhost:5000` (or `http://172.20.10.4:5000` from other devices on the same network)
+The server starts at `http://localhost:5000` (or `http://192.168.2.209:5000` from other devices on the same network)
 
 ---
 
@@ -86,21 +86,21 @@ The server starts at `http://localhost:5000` (or `http://172.20.10.4:5000` from 
 ## Pages
 
 **On this PC:** `http://localhost:5000`  
-**On other devices (same network):** `http://172.20.10.4:5000`
+**On other devices (same network):** `http://192.168.2.209:5000`
 
 | URL | PC | Phone / Other Device | Access |
 |-----|----|----------------------|--------|
-| /login | [localhost:5000/login](http://localhost:5000/login) | [172.20.10.4:5000/login](http://172.20.10.4:5000/login) | All |
-| /register | [localhost:5000/register](http://localhost:5000/register) | [172.20.10.4:5000/register](http://172.20.10.4:5000/register) | Public |
-| /lecturer-register | [localhost:5000/lecturer-register](http://localhost:5000/lecturer-register) | [172.20.10.4:5000/lecturer-register](http://172.20.10.4:5000/lecturer-register) | Code required |
-| /admin-register | [localhost:5000/admin-register](http://localhost:5000/admin-register) | [172.20.10.4:5000/admin-register](http://172.20.10.4:5000/admin-register) | Code required |
-| /student-dashboard | [localhost:5000/student-dashboard](http://localhost:5000/student-dashboard) | [172.20.10.4:5000/student-dashboard](http://172.20.10.4:5000/student-dashboard) | Student |
-| /enrollment | [localhost:5000/enrollment](http://localhost:5000/enrollment) | [172.20.10.4:5000/enrollment](http://172.20.10.4:5000/enrollment) | Student |
-| /lecturer-dashboard | [localhost:5000/lecturer-dashboard](http://localhost:5000/lecturer-dashboard) | [172.20.10.4:5000/lecturer-dashboard](http://172.20.10.4:5000/lecturer-dashboard) | Lecturer |
-| /admin-dashboard | [localhost:5000/admin-dashboard](http://localhost:5000/admin-dashboard) | [172.20.10.4:5000/admin-dashboard](http://172.20.10.4:5000/admin-dashboard) | Admin |
-| /courses | [localhost:5000/courses](http://localhost:5000/courses) | [172.20.10.4:5000/courses](http://172.20.10.4:5000/courses) | Admin |
-| /schedule-management | [localhost:5000/schedule-management](http://localhost:5000/schedule-management) | [172.20.10.4:5000/schedule-management](http://172.20.10.4:5000/schedule-management) | Admin |
-| /reports | [localhost:5000/reports](http://localhost:5000/reports) | [172.20.10.4:5000/reports](http://172.20.10.4:5000/reports) | Admin / Lecturer |
+| /login | [localhost:5000/login](http://localhost:5000/login) | [192.168.2.209:5000/login](http://192.168.2.209:5000/login) | All |
+| /register | [localhost:5000/register](http://localhost:5000/register) | [192.168.2.209:5000/register](http://192.168.2.209:5000/register) | Public |
+| /lecturer-register | [localhost:5000/lecturer-register](http://localhost:5000/lecturer-register) | [192.168.2.209:5000/lecturer-register](http://192.168.2.209:5000/lecturer-register) | Code required |
+| /admin-register | [localhost:5000/admin-register](http://localhost:5000/admin-register) | [192.168.2.209:5000/admin-register](http://192.168.2.209:5000/admin-register) | Code required |
+| /student-dashboard | [localhost:5000/student-dashboard](http://localhost:5000/student-dashboard) | [192.168.2.209:5000/student-dashboard](http://192.168.2.209:5000/student-dashboard) | Student |
+| /enrollment | [localhost:5000/enrollment](http://localhost:5000/enrollment) | [192.168.2.209:5000/enrollment](http://192.168.2.209:5000/enrollment) | Student |
+| /lecturer-dashboard | [localhost:5000/lecturer-dashboard](http://localhost:5000/lecturer-dashboard) | [192.168.2.209:5000/lecturer-dashboard](http://192.168.2.209:5000/lecturer-dashboard) | Lecturer |
+| /admin-dashboard | [localhost:5000/admin-dashboard](http://localhost:5000/admin-dashboard) | [192.168.2.209:5000/admin-dashboard](http://192.168.2.209:5000/admin-dashboard) | Admin |
+| /courses | [localhost:5000/courses](http://localhost:5000/courses) | [192.168.2.209:5000/courses](http://192.168.2.209:5000/courses) | Admin |
+| /schedule-management | [localhost:5000/schedule-management](http://localhost:5000/schedule-management) | [192.168.2.209:5000/schedule-management](http://192.168.2.209:5000/schedule-management) | Admin |
+| /reports | [localhost:5000/reports](http://localhost:5000/reports) | [192.168.2.209:5000/reports](http://192.168.2.209:5000/reports) | Admin / Lecturer |
 
 ---
 
